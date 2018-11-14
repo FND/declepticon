@@ -1,0 +1,26 @@
+{
+	"name": "declepticon",
+	"version": "0.0.0",
+	"description": "declarative data transformations",
+	"author": "FND",
+	"license": "Apache-2.0",
+	"homepage": "https://github.com/FND/declepticon",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/FND/declepticon.git"
+	},
+	"bugs": {
+		"url": "https://github.com/FND/declepticon/issues"
+	},
+	"main": "src/index.js",
+	"scripts": {
+		"test": "npm run lint && npm run test:unit",
+		"test:unit": "mocha test/test_*.js",
+		"lint": "eslint --cache src test && echo ✓"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"eslint-config-fnd": "^1.6.0",
+		"mocha": "^5.2.0"
+	}
+}
