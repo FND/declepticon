@@ -1,9 +1,11 @@
 "use strict";
+let { objectKeys } = require("./validators");
+let { log, repr } = require("./util");
 
 exports.eager = eager;
 
 exports.Record = class Record {
-	ingest(data) {
+	ingest(data, logger) {
 		// separate eager (pre-validation) from lazy (post-validation) transformers
 		let transformers = Object.entries(this.constructor.slots).reduce((memo,
 				[slot, transformer]) => {
@@ -38,12 +40,18 @@ exports.Record = class Record {
 		};
 
 		transformers.preval.forEach(setSlot);
-		this.validate(data);
+		this.validate(data, logger);
 		transformers.postval.forEach(setSlot);
 	}
 
-	validate(data) {
-		// TODO
+	validate(data, { warn } = log) {
+		// check top-level structure
+		let expectedFields = Object.keys(this.constructor.fields);
+		let allValid = objectKeys(data, expectedFields, (type, diff) => {
+			warn(`${this}: ${type} entries ${repr(diff, true)}`);
+		});
+
+		return allValid;
 	}
 
 	toString(details) { // XXX: argument violates standard contract

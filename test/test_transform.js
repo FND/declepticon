@@ -2,6 +2,7 @@
 "use strict";
 
 let { transformation, eager } = require("../src");
+let { makeLogger } = require("./util");
 let { strictEqual: assertSame, deepStrictEqual: assertDeep } = require("assert");
 
 let DATA = [{
@@ -20,6 +21,7 @@ let DATA = [{
 
 let DESCRIPTOR = {
 	name: "Party",
+	fields: {},
 	slots: {
 		category: "type",
 		id: eager,
@@ -32,7 +34,10 @@ let DESCRIPTOR = {
 
 describe("data transformation", () => {
 	it("should transform incoming JSON-style data to corresponding instances", () => {
-		let transform = transformation(DESCRIPTOR);
+		let logger = makeLogger(); // required to suppress nagging validation
+		let descriptor = Object.assign({ logger }, DESCRIPTOR);
+		let transform = transformation(descriptor);
+
 		// NB: eager slots precede lazy ones
 		let slots = ["id", "designation", "category", "zone", "active"];
 
