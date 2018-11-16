@@ -1,11 +1,14 @@
 "use strict";
 
-let { Record, eager } = require("./record");
+let { Record, optional, eager } = require("./record");
 let { objectKeys } = require("./validators");
 let { abort, log, repr } = require("./util");
 
-exports.transformation = transformation;
-exports.eager = eager;
+module.exports = {
+	transformation,
+	optional,
+	eager
+};
 
 function transformation(descriptor) {
 	validateDescriptor(descriptor); // avoids cryptic exceptions

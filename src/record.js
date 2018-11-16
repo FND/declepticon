@@ -2,6 +2,9 @@
 let { objectKeys } = require("./validators");
 let { log, repr } = require("./util");
 
+let OPTIONAL = Symbol("optional field");
+
+exports.optional = (...validators) => ({ optional: OPTIONAL, validators });
 exports.eager = eager;
 
 exports.Record = class Record {
@@ -45,9 +48,42 @@ exports.Record = class Record {
 	}
 
 	validate(data, { warn } = log) {
+		let allValid = true;
+
+		// determine expected top-level structure while validating field values
+		let expectedFields = Object.entries(this.constructor.fields).reduce((memo,
+				[key, validators]) => {
+			let optional = validators && validators.optional === OPTIONAL;
+			if(optional) {
+				validators = validators.validators;
+			}
+			memo[optional ? "ignore" : "expected"].push(key);
+
+			// value is valid if at least one validator passes (`OR` conjunction)
+			let value = data[key];
+			if(!validators || !validators.pop) {
+				validators = [validators];
+			}
+			let valid = validators.some(validator => {
+				// a validator is either a function or the expected value
+				if(optional && !data.hasOwnProperty(key)) { // XXX: does not support prototypes
+					return true;
+				}
+				if(validator && validator.call) {
+					return validator(value);
+				}
+				return validator === value;
+			});
+			if(!valid) {
+				allValid = false;
+				warn(`${this} invalid ${repr(key)}: ${repr(value, true)}`);
+			}
+
+			return memo;
+		}, { expected: [], ignore: [] });
+
 		// check top-level structure
-		let expectedFields = Object.keys(this.constructor.fields);
-		let allValid = objectKeys(data, expectedFields, (type, diff) => {
+		objectKeys(data, expectedFields, (type, diff) => {
 			warn(`${this}: ${type} entries ${repr(diff, true)}`);
 		});
 

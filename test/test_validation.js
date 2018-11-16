@@ -1,7 +1,7 @@
 /* global describe, it */
 "use strict";
 
-let { transformation, eager } = require("../src");
+let { transformation, optional, eager } = require("../src");
 let { makeLogger } = require("./util");
 let { strictEqual: assertSame, deepStrictEqual: assertDeep } = require("assert");
 
@@ -73,6 +73,79 @@ describe("data validation", () => {
 		assertDeep(descriptor.logger.messages.info, []);
 		assertDeep(descriptor.logger.messages.warn, []);
 	});
+
+	it("should support optional top-level fields", () => {
+		let descriptor = makeDescriptor();
+		descriptor.fields = {
+			type: optional(acceptAll),
+			id: acceptAll,
+			name: rejectAll,
+			time: optional(rejectAll, rejectAll, rejectAll, acceptAll)
+		};
+		let transform = transformation(descriptor);
+
+		transform({
+			name: "bogus",
+			time: 123456789,
+			extra: null
+		});
+		assertDeep(descriptor.logger.messages.info, []);
+		assertDeep(descriptor.logger.messages.warn, [
+			'<Party #undefined "undefined"> invalid `name`: `"bogus"`',
+			'<Party #undefined "undefined">: missing entries `["id"]`',
+			'<Party #undefined "undefined">: spurious entries `["extra"]`'
+		]);
+	});
+
+	it("should report invalid property values in incoming data", () => {
+		let descriptor = makeDescriptor();
+		descriptor.fields = {
+			type: rejectAll,
+			id: rejectAll,
+			name: rejectAll,
+			zone: rejectAll,
+			active: rejectAll
+		};
+		let transform = transformation(descriptor);
+
+		let record = transform(DATA[0]);
+		assertDeep(descriptor.logger.messages.info, []);
+		assertDeep(descriptor.logger.messages.warn, [
+			'<Party #123 "undefined"> invalid `type`: `"party"`',
+			'<Party #123 "undefined"> invalid `id`: `123`',
+			'<Party #123 "undefined"> invalid `name`: `"primo"`',
+			'<Party #123 "undefined"> invalid `zone`: `"753"`',
+			'<Party #123 "undefined"> invalid `active`: `true`'
+		]);
+		// ensure data was transformed properly
+		assertDeep(Object.keys(record), ["id", "designation"]);
+		assertSame(record.id, 123);
+		assertSame(record.designation, "primo");
+	});
+
+	it("should support multiple validators per field as `OR` conjunction", () => {
+		let descriptor = makeDescriptor();
+		descriptor.fields = {
+			type: [rejectAll, acceptAll],
+			id: [acceptAll, rejectAll],
+			name: [rejectAll, rejectAll],
+			zone: [acceptAll, acceptAll],
+			active: [rejectAll, "always"]
+		};
+		let transform = transformation(descriptor);
+
+		transform({
+			type: "party",
+			id: 123,
+			name: "primo",
+			zone: "753",
+			active: "always"
+		});
+		assertDeep(descriptor.logger.messages.info, []);
+		assertDeep(descriptor.logger.messages.warn, [
+			'<Party #123 "undefined"> invalid `name`: `"primo"`'
+		]);
+	});
 });
 
 function makeDescriptor() {
@@ -82,4 +155,8 @@ function makeDescriptor() {
 
 function acceptAll() {
 	return true;
+}
+
+function rejectAll() {
+	return false;
 }
