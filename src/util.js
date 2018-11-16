@@ -1,5 +1,10 @@
 "use strict";
 
+exports.abort = function abort(msg, code = 1) {
+	console.error(msg);
+	process.exit(code);
+};
+
 exports.repr = repr;
 
 exports.log = {
