@@ -1,7 +1,7 @@
 /* global describe, it */
 "use strict";
 
-let { transformation, optional, eager } = require("../src");
+let { transformation, struct, optional, eager } = require("../src");
 let { makeLogger } = require("./util");
 let { strictEqual: assertSame, deepStrictEqual: assertDeep } = require("assert");
 
@@ -144,6 +144,61 @@ describe("data validation", () => {
 		assertDeep(descriptor.logger.messages.info, []);
 		assertDeep(descriptor.logger.messages.warn, [
 			'<Party #123 "undefined"> invalid `name`: `"primo"`'
+		]);
+	});
+
+	it("should support nested structures", () => {
+		let descriptor = makeDescriptor();
+		descriptor.fields = {
+			id: 123,
+			payload: struct({
+				name: "PartyPayload",
+				fields: {
+					price: 456,
+					data: struct({
+						name: "PartyData",
+						fields: {
+							history: false
+						}
+					})
+				}
+			}),
+			active: true
+		};
+		let transform = transformation(descriptor);
+
+		transform({
+			id: 123,
+			payload: {
+				cost: 456,
+				data: {
+					history: "none",
+					reserve: false
+				}
+			}
+		});
+		assertDeep(descriptor.logger.messages.info, []);
+		assertDeep(descriptor.logger.messages.warn, [ /* eslint-disable max-len */
+			'<Party #123 "undefined"> → <PartyPayload> invalid `price`: `undefined`',
+			'<Party #123 "undefined"> → <PartyPayload> → <PartyData> invalid `history`: `"none"`',
+			'<Party #123 "undefined"> → <PartyPayload> → <PartyData>: spurious entries `["reserve"]`',
+			'<Party #123 "undefined"> → <PartyPayload> invalid `data`: `{"history":"none","reserve":false}`',
+			'<Party #123 "undefined"> → <PartyPayload>: missing entries `["price"]`',
+			'<Party #123 "undefined"> → <PartyPayload>: spurious entries `["cost"]`',
+			'<Party #123 "undefined"> invalid `payload`: `{"cost":456,"data":{"history":"none","reserve":false}}`',
+			'<Party #123 "undefined"> invalid `active`: `undefined`',
+			'<Party #123 "undefined">: missing entries `["active"]`'
+		]); /* eslint-enable max-len */
+
+		descriptor.logger = makeLogger();
+		transform({
+			id: 123,
+			payload: null,
+			active: true
+		});
+		assertDeep(descriptor.logger.messages.info, []);
+		assertDeep(descriptor.logger.messages.warn, [
+			'<Party #123 "undefined"> invalid `payload`: `null`'
 		]);
 	});
 });

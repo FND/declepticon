@@ -47,7 +47,10 @@ exports.Record = class Record {
 		transformers.postval.forEach(setSlot);
 	}
 
-	validate(data, { warn } = log) {
+	validate(data, { context, warn = log.warn } = {}) {
+		if(context) {
+			this.context = context; // XXX: hacky
+		}
 		let allValid = true;
 
 		// determine expected top-level structure while validating field values
@@ -65,12 +68,22 @@ exports.Record = class Record {
 				validators = [validators];
 			}
 			let valid = validators.some(validator => {
-				// a validator is either a function or the expected value
+				// a validator is either a `Record` (via a nested descriptor),
+				// a function or the expected value
 				if(optional && !data.hasOwnProperty(key)) { // XXX: does not support prototypes
 					return true;
 				}
-				if(validator && validator.call) {
-					return validator(value);
+				if(validator) {
+					if(validator.prototype instanceof Record) {
+						if(!value) {
+							return false;
+						}
+						let subRecord = new validator(); // eslint-disable-line new-cap
+						return subRecord.validate(value, { warn, context: this });
+					}
+					if(validator.call) {
+						return validator(value);
+					}
 				}
 				return validator === value;
 			});
@@ -91,7 +104,9 @@ exports.Record = class Record {
 	}
 
 	toString(details) { // XXX: argument violates standard contract
-		return `<${this.constructor.name}${details ? ` ${details}` : ""}>`;
+		let { context } = this;
+		let prefix = context ? `${context} → ` : "";
+		return `${prefix}<${this.constructor.name}${details ? ` ${details}` : ""}>`;
 	}
 };
 
