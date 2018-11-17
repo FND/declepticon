@@ -1,6 +1,26 @@
 "use strict";
 
-module.exports = { objectKeys };
+let array = value => !!(value && value.pop);
+let arrayOf = validator => value => array(value) && value.every(item => validator(item));
+let string = value => value ? !!value.substr : value === "";
+// NB: ignores whitespace
+let nonBlankString = value => string(value) && value.trim() !== "";
+
+module.exports = {
+	objectKeys,
+	array,
+	arrayOf,
+	integerString: value => {
+		if(!nonBlankString(value)) {
+			return false;
+		}
+		return parseInt(value, 10).toString() === value.trim(); // XXX: crude?
+	},
+	nonBlankString,
+	string,
+	integer: value => Number.isInteger(value),
+	boolean: value => value === true || value === false
+};
 
 // `value` is the object to be checked
 // `expected` is either a list of keys or an object `{ expected, ignore }`, each

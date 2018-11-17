@@ -1,7 +1,8 @@
 /* global describe, it */
 "use strict";
 
-let { objectKeys } = require("../src/validators");
+let { objectKeys, arrayOf, array, integerString, nonBlankString, string,
+	integer, boolean } = require("../src/validators");
 let { strictEqual: assertSame, deepStrictEqual: assertDeep } = require("assert");
 
 describe("validators", () => {
@@ -42,5 +43,62 @@ describe("validators", () => {
 			type: "spurious",
 			diff: ["foo", "bar", "baz"]
 		}]);
+	});
+
+	it("should detect arrays, optionally including its items", () => {
+		assertSame(array("foo"), false);
+		assertSame(array(["foo"]), true);
+		assertSame(array(["foo", 123]), true);
+
+		let integerArray = arrayOf(integer);
+		let values = ["123", "456"];
+		assertSame(integerArray([123, 456]), true);
+		assertSame(integerArray(values), false);
+		assertSame(arrayOf(integerString)(values), true);
+	});
+
+	it("should detect integers within strings", () => {
+		assertSame(integerString(" 123 "), true);
+		assertSame(integerString("0"), true);
+		assertSame(integerString(""), false);
+		assertSame(integerString(" "), false);
+		assertSame(integerString(123), false);
+		assertSame(integerString(null), false);
+		assertSame(integerString(undefined), false);
+	});
+
+	it("should detect non-blank strings", () => {
+		assertSame(nonBlankString("0"), true);
+		assertSame(nonBlankString(""), false);
+		assertSame(nonBlankString(" "), false);
+		assertSame(nonBlankString(0), false);
+		assertSame(nonBlankString(null), false);
+		assertSame(nonBlankString(undefined), false);
+	});
+
+	it("should detect strings", () => {
+		assertSame(string(""), true);
+		assertSame(string(" "), true);
+		assertSame(string("123"), true);
+		assertSame(string(0), false);
+		assertSame(string(null), false);
+		assertSame(string(undefined), false);
+	});
+
+	it("should detect integers", () => {
+		assertSame(integer("123"), false);
+		assertSame(integer(123), true);
+		assertSame(integer(0), true);
+		assertSame(integer(null), false);
+		assertSame(integer(undefined), false);
+	});
+
+	it("should detect booleans", () => {
+		assertSame(boolean(true), true);
+		assertSame(boolean(false), true);
+		assertSame(boolean("true"), false);
+		assertSame(boolean("false"), false);
+		assertSame(boolean(null), false);
+		assertSame(boolean(undefined), false);
 	});
 });
