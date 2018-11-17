@@ -1,6 +1,6 @@
 {
 	"name": "declepticon",
-	"version": "0.0.0",
+	"version": "0.8.0",
 	"description": "declarative data transformations",
 	"author": "FND",
 	"license": "Apache-2.0",
@@ -21,6 +21,7 @@
 	"dependencies": {},
 	"devDependencies": {
 		"eslint-config-fnd": "^1.6.0",
-		"mocha": "^5.2.0"
+		"mocha": "^5.2.0",
+		"release-util-fnd": "^1.1.1"
 	}
 }
