@@ -59,6 +59,24 @@ describe("data transformation", () => {
 		assertSame(`${record}`, '<Party #456 "ultimo">');
 	});
 
+	it("should support additional context for transformations", () => {
+		let descriptor = Object.assign({}, DESCRIPTOR, {
+			logger: makeLogger(), // suppresses nagging validation
+			slots: {
+				id: eager,
+				zone: ({ zone }, context) => `${zone} (${context.range})`
+			}
+		});
+		let transform = transformation(descriptor);
+
+		let record = transform(DATA[0], { range: "small" });
+		assertSame(record.id, 123);
+		assertSame(record.zone, "753 (small)");
+
+		record = transform(DATA[0], { range: "large" });
+		assertSame(record.zone, "753 (large)");
+	});
+
 	it("should support skipping instance properties", () => {
 		let descriptor = injectLogger(DESCRIPTOR); // suppresses nagging validation
 		let transform = transformation(descriptor);

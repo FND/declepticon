@@ -17,9 +17,9 @@ module.exports = {
 
 function transformation(descriptor) {
 	let cls = struct(descriptor, { strict: true });
-	return data => {
+	return (data, context) => {
 		let record = new cls(); // eslint-disable-line new-cap
-		record.ingest(data, descriptor.logger);
+		record.ingest(data, { context, logger: descriptor.logger });
 		return record;
 	};
 }

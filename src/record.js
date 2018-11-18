@@ -10,7 +10,7 @@ exports.skipSlot = SKIP_SLOT;
 exports.eager = eager;
 
 exports.Record = class Record {
-	ingest(data, logger) {
+	ingest(data, { context, logger }) {
 		// separate eager (pre-validation) from lazy (post-validation) transformers
 		let transformers = Object.entries(this.constructor.slots).reduce((memo,
 				[slot, transformer]) => {
@@ -37,7 +37,7 @@ exports.Record = class Record {
 			if(transformer === true) { // adopt original value
 				value = data[slot]; // eslint-disable-line no-var
 			} else if(transformer.call) { // arbitrary transformation
-				value = transformer(data);
+				value = transformer(data, context);
 				if(value === SKIP_SLOT) { // ignore
 					return;
 				}
