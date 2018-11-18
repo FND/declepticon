@@ -1,14 +1,17 @@
 "use strict";
 
 let { Record, optional, eager } = require("./record");
-let { objectKeys } = require("./validators");
+let validators = require("./validators");
 let { abort, log, repr } = require("./util");
 
 module.exports = {
 	transformation,
 	struct,
 	optional,
-	eager
+	eager,
+	validators,
+	log,
+	repr
 };
 
 function transformation(descriptor) {
@@ -53,7 +56,7 @@ function validateDescriptor(descriptor, { strict }) {
 		expected[type].push("slots");
 	}
 
-	objectKeys(descriptor, expected, (type, diff) => {
+	validators.objectKeys(descriptor, expected, (type, diff) => {
 		let suffix = diff.length === 1 ? "property" : "properties";
 		suffix += " " + diff.map(prop => repr(prop)).join(", ");
 		let msg = `${type} descriptor ${suffix}`;
