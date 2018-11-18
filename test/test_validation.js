@@ -151,17 +151,11 @@ describe("data validation", () => {
 		let descriptor = injectLogger(DESCRIPTOR);
 		descriptor.fields = {
 			id: 123,
-			payload: struct({
-				name: "PartyPayload",
-				fields: {
-					price: 456,
-					data: struct({
-						name: "PartyData",
-						fields: {
-							history: false
-						}
-					})
-				}
+			payload: struct("PartyPayload", {
+				price: 456,
+				data: struct("PartyData", {
+					history: false
+				})
 			}),
 			active: true
 		};

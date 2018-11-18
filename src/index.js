@@ -16,7 +16,7 @@ module.exports = {
 };
 
 function transformation(descriptor) {
-	let cls = struct(descriptor, { strict: true });
+	let cls = struct(descriptor);
 	return (data, context) => {
 		let record = new cls(); // eslint-disable-line new-cap
 		record.ingest(data, { context, logger: descriptor.logger });
@@ -24,9 +24,19 @@ function transformation(descriptor) {
 	};
 }
 
-function struct(descriptor, { strict } = {}) {
-	validateDescriptor(descriptor, { strict }); // avoids cryptic exceptions
-	let { name, stringify = () => "" } = descriptor;
+// accepts either a descriptor object or `name, fields, stringify` as arguments;
+// slots are only required for top-level structures
+function struct(name, fields, stringify) {
+	let comprehensive = !fields;
+	let descriptor = comprehensive ? name : { name, fields, stringify };
+
+	validateDescriptor(descriptor, { comprehensive }); // avoids cryptic exceptions
+	if(comprehensive) {
+		({ name, stringify } = descriptor);
+	}
+	if(!stringify) {
+		stringify = () => "";
+	}
 
 	// generate a named subclass which merely operates as a dispatching closure
 	return { // temporary object allows for dynamic name assignment
@@ -47,15 +57,13 @@ function struct(descriptor, { strict } = {}) {
 	}[name];
 }
 
-function validateDescriptor(descriptor, { strict }) {
+function validateDescriptor(descriptor, { comprehensive }) {
 	let expected = {
 		expected: ["name", "fields"],
 		ignore: ["stringify", "logger"]
 	};
-	if(strict) {
-		let type = strict ? "expected" : "ignore";
-		expected[type].push("slots");
-	}
+	let type = comprehensive ? "expected" : "ignore";
+	expected[type].push("slots");
 
 	validators.objectKeys(descriptor, expected, (type, diff) => {
 		let suffix = diff.length === 1 ? "property" : "properties";
