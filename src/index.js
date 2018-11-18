@@ -1,6 +1,6 @@
 "use strict";
 
-let { Record, optional, eager } = require("./record");
+let { Record, optional, skipSlot, eager } = require("./record");
 let validators = require("./validators");
 let { abort, log, repr } = require("./util");
 
@@ -8,6 +8,7 @@ module.exports = {
 	transformation,
 	struct,
 	optional,
+	skipSlot,
 	eager,
 	validators,
 	log,

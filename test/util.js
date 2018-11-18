@@ -1,6 +1,11 @@
 "use strict";
 
-exports.makeLogger = () => {
+module.exports = {
+	injectLogger: descriptor => Object.assign({ logger: makeLogger() }, descriptor),
+	makeLogger
+};
+
+function makeLogger() {
 	let info = [];
 	let warn = [];
 	return {
@@ -8,7 +13,7 @@ exports.makeLogger = () => {
 		info: (...msg) => void log(msg, info),
 		warn: (...msg) => void log(msg, warn)
 	};
-};
+}
 
 function log(messages, list) {
 	let entry = messages.join(" <|> ");

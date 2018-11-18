@@ -3,8 +3,10 @@ let { objectKeys } = require("./validators");
 let { log, repr } = require("./util");
 
 let OPTIONAL = Symbol("optional field");
+let SKIP_SLOT = Symbol("optional slot");
 
 exports.optional = (...validators) => ({ optional: OPTIONAL, validators });
+exports.skipSlot = SKIP_SLOT;
 exports.eager = eager;
 
 exports.Record = class Record {
@@ -36,6 +38,9 @@ exports.Record = class Record {
 				value = data[slot]; // eslint-disable-line no-var
 			} else if(transformer.call) { // arbitrary transformation
 				value = transformer(data);
+				if(value === SKIP_SLOT) { // ignore
+					return;
+				}
 			} else { // transfer value from another property
 				value = data[transformer];
 			}

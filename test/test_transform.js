@@ -1,8 +1,8 @@
 /* global describe, it */
 "use strict";
 
-let { transformation, eager } = require("../src");
-let { makeLogger } = require("./util");
+let { transformation, skipSlot, eager } = require("../src");
+let { injectLogger, makeLogger } = require("./util");
 let { strictEqual: assertSame, deepStrictEqual: assertDeep } = require("assert");
 
 let DATA = [{
@@ -33,9 +33,8 @@ let DESCRIPTOR = {
 };
 
 describe("data transformation", () => {
-	it("should transform incoming JSON-style data to corresponding instances", () => {
-		let logger = makeLogger(); // required to suppress nagging validation
-		let descriptor = Object.assign({ logger }, DESCRIPTOR);
+	it("should transform incoming JSON-style data to corresponding records", () => {
+		let descriptor = injectLogger(DESCRIPTOR); // suppresses nagging validation
 		let transform = transformation(descriptor);
 
 		// NB: eager slots precede lazy ones
@@ -58,5 +57,23 @@ describe("data transformation", () => {
 		assertSame(record.zone, 175);
 		assertSame(record.active, false);
 		assertSame(`${record}`, '<Party #456 "ultimo">');
+	});
+
+	it("should support skipping instance properties", () => {
+		let descriptor = injectLogger(DESCRIPTOR); // suppresses nagging validation
+		let transform = transformation(descriptor);
+		let record = transform(DATA[0]);
+		assertDeep(Object.keys(record),
+				["id", "designation", "category", "zone", "active"]);
+
+		descriptor = Object.assign({}, DESCRIPTOR, {
+			logger: makeLogger(), // suppresses nagging validation
+			slots: Object.assign({}, DESCRIPTOR.slots, {
+				zone: ({ zone }) => skipSlot
+			})
+		});
+		transform = transformation(descriptor);
+		record = transform(DATA[0]);
+		assertDeep(Object.keys(record), ["id", "designation", "category", "active"]);
 	});
 });

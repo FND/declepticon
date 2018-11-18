@@ -2,7 +2,7 @@
 "use strict";
 
 let { transformation, struct, optional, eager } = require("../src");
-let { makeLogger } = require("./util");
+let { injectLogger, makeLogger } = require("./util");
 let { strictEqual: assertSame, deepStrictEqual: assertDeep } = require("assert");
 
 let DATA = [{
@@ -31,7 +31,7 @@ let DESCRIPTOR = {
 
 describe("data validation", () => {
 	it("should report discrepancies regarding top-level structure", () => {
-		let descriptor = makeDescriptor();
+		let descriptor = injectLogger(DESCRIPTOR);
 		let transform = transformation(descriptor);
 
 		let record = transform(DATA[0]);
@@ -75,7 +75,7 @@ describe("data validation", () => {
 	});
 
 	it("should support optional top-level fields", () => {
-		let descriptor = makeDescriptor();
+		let descriptor = injectLogger(DESCRIPTOR);
 		descriptor.fields = {
 			type: optional(acceptAll),
 			id: acceptAll,
@@ -98,7 +98,7 @@ describe("data validation", () => {
 	});
 
 	it("should report invalid property values in incoming data", () => {
-		let descriptor = makeDescriptor();
+		let descriptor = injectLogger(DESCRIPTOR);
 		descriptor.fields = {
 			type: rejectAll,
 			id: rejectAll,
@@ -124,7 +124,7 @@ describe("data validation", () => {
 	});
 
 	it("should support multiple validators per field as `OR` conjunction", () => {
-		let descriptor = makeDescriptor();
+		let descriptor = injectLogger(DESCRIPTOR);
 		descriptor.fields = {
 			type: [rejectAll, acceptAll],
 			id: [acceptAll, rejectAll],
@@ -148,7 +148,7 @@ describe("data validation", () => {
 	});
 
 	it("should support nested structures", () => {
-		let descriptor = makeDescriptor();
+		let descriptor = injectLogger(DESCRIPTOR);
 		descriptor.fields = {
 			id: 123,
 			payload: struct({
@@ -202,11 +202,6 @@ describe("data validation", () => {
 		]);
 	});
 });
-
-function makeDescriptor() {
-	let logger = makeLogger(); // required to suppress nagging validation
-	return Object.assign({ logger }, DESCRIPTOR);
-}
 
 function acceptAll() {
 	return true;
