@@ -37,7 +37,7 @@ exports.Record = class Record {
 			if(transformer === true) { // adopt original value
 				value = data[slot]; // eslint-disable-line no-var
 			} else if(transformer.call) { // arbitrary transformation
-				value = transformer(data, context);
+				value = transformer.call(this, data, context);
 				if(value === SKIP_SLOT) { // ignore
 					return;
 				}

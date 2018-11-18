@@ -64,7 +64,8 @@ describe("data transformation", () => {
 			logger: makeLogger(), // suppresses nagging validation
 			slots: {
 				id: eager,
-				zone: ({ zone }, context) => `${zone} (${context.range})`
+				zone: ({ zone }, context) => `${zone} (${context.range})`,
+				repr: function() { return `${this}`; }
 			}
 		});
 		let transform = transformation(descriptor);
@@ -72,9 +73,11 @@ describe("data transformation", () => {
 		let record = transform(DATA[0], { range: "small" });
 		assertSame(record.id, 123);
 		assertSame(record.zone, "753 (small)");
+		assertSame(record.repr, '<Party #123 "undefined">');
 
 		record = transform(DATA[0], { range: "large" });
 		assertSame(record.zone, "753 (large)");
+		assertSame(record.repr, '<Party #123 "undefined">');
 	});
 
 	it("should support skipping instance properties", () => {
