@@ -102,7 +102,9 @@ exports.Record = class Record {
 
 		// check top-level structure
 		objectKeys(data, expectedFields, (type, diff) => {
-			warn(`${this}: ${type} entries ${repr(diff, true)}`);
+			let delta = diff.map(entry => repr(entry)).join(", ");
+			let desc = diff.length === 1 ? "entry" : "entries";
+			warn(`${this}: ${type} ${desc} ${delta}`);
 		});
 
 		return allValid;

@@ -37,7 +37,7 @@ describe("data validation", () => {
 		let record = transform(DATA[0]);
 		assertDeep(descriptor.logger.messages.info, []);
 		assertDeep(descriptor.logger.messages.warn, [ /* eslint-disable max-len */
-			'<Party #123 "undefined">: spurious entries `["type","id","name","zone","active"]`'
+			'<Party #123 "undefined">: spurious entries `type`, `id`, `name`, `zone`, `active`'
 		]); /* eslint-enable max-len */
 		// ensure data was transformed anyway
 		assertDeep(Object.keys(record), ["id", "designation"]);
@@ -55,7 +55,7 @@ describe("data validation", () => {
 		record = transform(DATA[0]);
 		assertDeep(descriptor.logger.messages.info, []);
 		assertDeep(descriptor.logger.messages.warn, [
-			'<Party #123 "undefined">: spurious entries `["type","name","active"]`'
+			'<Party #123 "undefined">: spurious entries `type`, `name`, `active`'
 		]);
 
 		// extend fields specification
@@ -92,8 +92,8 @@ describe("data validation", () => {
 		assertDeep(descriptor.logger.messages.info, []);
 		assertDeep(descriptor.logger.messages.warn, [
 			'<Party #undefined "undefined"> invalid `name`: `"bogus"`',
-			'<Party #undefined "undefined">: missing entries `["id"]`',
-			'<Party #undefined "undefined">: spurious entries `["extra"]`'
+			'<Party #undefined "undefined">: missing entry `id`',
+			'<Party #undefined "undefined">: spurious entry `extra`'
 		]);
 	});
 
@@ -175,13 +175,13 @@ describe("data validation", () => {
 		assertDeep(descriptor.logger.messages.warn, [ /* eslint-disable max-len */
 			'<Party #123 "undefined"> → <PartyPayload> invalid `price`: `undefined`',
 			'<Party #123 "undefined"> → <PartyPayload> → <PartyData> invalid `history`: `"none"`',
-			'<Party #123 "undefined"> → <PartyPayload> → <PartyData>: spurious entries `["reserve"]`',
+			'<Party #123 "undefined"> → <PartyPayload> → <PartyData>: spurious entry `reserve`',
 			'<Party #123 "undefined"> → <PartyPayload> invalid `data`: `{"history":"none","reserve":false}`',
-			'<Party #123 "undefined"> → <PartyPayload>: missing entries `["price"]`',
-			'<Party #123 "undefined"> → <PartyPayload>: spurious entries `["cost"]`',
+			'<Party #123 "undefined"> → <PartyPayload>: missing entry `price`',
+			'<Party #123 "undefined"> → <PartyPayload>: spurious entry `cost`',
 			'<Party #123 "undefined"> invalid `payload`: `{"cost":456,"data":{"history":"none","reserve":false}}`',
 			'<Party #123 "undefined"> invalid `active`: `undefined`',
-			'<Party #123 "undefined">: missing entries `["active"]`'
+			'<Party #123 "undefined">: missing entry `active`'
 		]); /* eslint-enable max-len */
 
 		descriptor.logger = makeLogger();
