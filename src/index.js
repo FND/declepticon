@@ -8,8 +8,8 @@ module.exports = {
 	transformation,
 	struct,
 	optional,
-	skipSlot,
 	eager,
+	skipSlot,
 	validators,
 	repr
 };

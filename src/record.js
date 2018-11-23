@@ -6,8 +6,8 @@ let OPTIONAL = Symbol("optional field");
 let SKIP_SLOT = Symbol("optional slot");
 
 exports.optional = (...validators) => ({ optional: OPTIONAL, validators });
-exports.skipSlot = SKIP_SLOT;
 exports.eager = eager;
+exports.skipSlot = SKIP_SLOT;
 
 exports.Record = class Record {
 	ingest(data, { context, onError }) {
