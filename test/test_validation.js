@@ -2,7 +2,7 @@
 "use strict";
 
 let { transformation, struct, optional, eager } = require("../src");
-let { injectLogger, makeLogger } = require("./util");
+let { injectLogger } = require("./util");
 let { strictEqual: assertSame, deepStrictEqual: assertDeep } = require("assert");
 
 let DATA = [{
@@ -31,12 +31,11 @@ let DESCRIPTOR = {
 
 describe("data validation", () => {
 	it("should report discrepancies regarding top-level structure", () => {
-		let descriptor = injectLogger(DESCRIPTOR);
+		let { descriptor, reset, messages } = injectLogger(DESCRIPTOR);
 		let transform = transformation(descriptor);
 
 		let record = transform(DATA[0]);
-		assertDeep(descriptor.logger.messages.info, []);
-		assertDeep(descriptor.logger.messages.warn, [ /* eslint-disable max-len */
+		assertDeep(messages, [ /* eslint-disable max-len */
 			'<Party #123 "undefined">: spurious entries `type`, `id`, `name`, `zone`, `active`'
 		]); /* eslint-enable max-len */
 		// ensure data was transformed anyway
@@ -45,7 +44,7 @@ describe("data validation", () => {
 		assertSame(record.designation, "primo");
 
 		// add fields specification
-		descriptor.logger = makeLogger();
+		reset();
 		descriptor.fields = {
 			zone: acceptAll,
 			id: acceptAll
@@ -53,13 +52,12 @@ describe("data validation", () => {
 		transform = transformation(descriptor);
 
 		record = transform(DATA[0]);
-		assertDeep(descriptor.logger.messages.info, []);
-		assertDeep(descriptor.logger.messages.warn, [
+		assertDeep(messages, [
 			'<Party #123 "undefined">: spurious entries `type`, `name`, `active`'
 		]);
 
 		// extend fields specification
-		descriptor.logger = makeLogger();
+		reset();
 		descriptor.fields = {
 			type: acceptAll,
 			id: acceptAll,
@@ -70,12 +68,11 @@ describe("data validation", () => {
 		transform = transformation(descriptor);
 
 		record = transform(DATA[0]);
-		assertDeep(descriptor.logger.messages.info, []);
-		assertDeep(descriptor.logger.messages.warn, []);
+		assertDeep(messages, []);
 	});
 
 	it("should support optional top-level fields", () => {
-		let descriptor = injectLogger(DESCRIPTOR);
+		let { descriptor, messages } = injectLogger(DESCRIPTOR);
 		descriptor.fields = {
 			type: optional(acceptAll),
 			id: acceptAll,
@@ -89,8 +86,7 @@ describe("data validation", () => {
 			time: 123456789,
 			extra: null
 		});
-		assertDeep(descriptor.logger.messages.info, []);
-		assertDeep(descriptor.logger.messages.warn, [
+		assertDeep(messages, [
 			'<Party #undefined "undefined"> invalid `name`: `"bogus"`',
 			'<Party #undefined "undefined">: missing entry `id`',
 			'<Party #undefined "undefined">: spurious entry `extra`'
@@ -98,7 +94,7 @@ describe("data validation", () => {
 	});
 
 	it("should report invalid property values in incoming data", () => {
-		let descriptor = injectLogger(DESCRIPTOR);
+		let { descriptor, messages } = injectLogger(DESCRIPTOR);
 		descriptor.fields = {
 			type: rejectAll,
 			id: rejectAll,
@@ -109,8 +105,7 @@ describe("data validation", () => {
 		let transform = transformation(descriptor);
 
 		let record = transform(DATA[0]);
-		assertDeep(descriptor.logger.messages.info, []);
-		assertDeep(descriptor.logger.messages.warn, [
+		assertDeep(messages, [
 			'<Party #123 "undefined"> invalid `type`: `"party"`',
 			'<Party #123 "undefined"> invalid `id`: `123`',
 			'<Party #123 "undefined"> invalid `name`: `"primo"`',
@@ -124,7 +119,7 @@ describe("data validation", () => {
 	});
 
 	it("should support multiple validators per field as `OR` conjunction", () => {
-		let descriptor = injectLogger(DESCRIPTOR);
+		let { descriptor, messages } = injectLogger(DESCRIPTOR);
 		descriptor.fields = {
 			type: [rejectAll, acceptAll],
 			id: [acceptAll, rejectAll],
@@ -141,14 +136,13 @@ describe("data validation", () => {
 			zone: "753",
 			active: "always"
 		});
-		assertDeep(descriptor.logger.messages.info, []);
-		assertDeep(descriptor.logger.messages.warn, [
+		assertDeep(messages, [
 			'<Party #123 "undefined"> invalid `name`: `"primo"`'
 		]);
 	});
 
 	it("should support nested structures", () => {
-		let descriptor = injectLogger(DESCRIPTOR);
+		let { descriptor, messages, reset } = injectLogger(DESCRIPTOR);
 		descriptor.fields = {
 			id: 123,
 			payload: struct("PartyPayload", {
@@ -171,8 +165,7 @@ describe("data validation", () => {
 				}
 			}
 		});
-		assertDeep(descriptor.logger.messages.info, []);
-		assertDeep(descriptor.logger.messages.warn, [ /* eslint-disable max-len */
+		assertDeep(messages, [ /* eslint-disable max-len */
 			'<Party #123 "undefined"> → <PartyPayload> invalid `price`: `undefined`',
 			'<Party #123 "undefined"> → <PartyPayload> → <PartyData> invalid `history`: `"none"`',
 			'<Party #123 "undefined"> → <PartyPayload> → <PartyData>: spurious entry `reserve`',
@@ -184,14 +177,13 @@ describe("data validation", () => {
 			'<Party #123 "undefined">: missing entry `active`'
 		]); /* eslint-enable max-len */
 
-		descriptor.logger = makeLogger();
+		reset();
 		transform({
 			id: 123,
 			payload: null,
 			active: true
 		});
-		assertDeep(descriptor.logger.messages.info, []);
-		assertDeep(descriptor.logger.messages.warn, [
+		assertDeep(messages, [
 			'<Party #123 "undefined"> invalid `payload`: `null`'
 		]);
 	});

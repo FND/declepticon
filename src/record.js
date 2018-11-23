@@ -1,6 +1,6 @@
 "use strict";
 let { objectKeys } = require("./validators");
-let { log, repr } = require("./util");
+let { warn, repr } = require("./util");
 
 let OPTIONAL = Symbol("optional field");
 let SKIP_SLOT = Symbol("optional slot");
@@ -10,7 +10,7 @@ exports.skipSlot = SKIP_SLOT;
 exports.eager = eager;
 
 exports.Record = class Record {
-	ingest(data, { context, logger }) {
+	ingest(data, { context, onError }) {
 		// separate eager (pre-validation) from lazy (post-validation) transformers
 		let transformers = Object.entries(this.constructor.slots).reduce((memo,
 				[slot, transformer]) => {
@@ -48,11 +48,11 @@ exports.Record = class Record {
 		};
 
 		transformers.preval.forEach(setSlot);
-		this.validate(data, logger);
+		this.validate(data, { onError });
 		transformers.postval.forEach(setSlot);
 	}
 
-	validate(data, { context, warn = log.warn } = {}) {
+	validate(data, { context, onError = warn } = {}) {
 		if(context) {
 			this.context = context; // XXX: hacky
 		}
@@ -84,7 +84,7 @@ exports.Record = class Record {
 							return false;
 						}
 						let subRecord = new validator(); // eslint-disable-line new-cap
-						return subRecord.validate(value, { warn, context: this });
+						return subRecord.validate(value, { context: this, onError });
 					}
 					if(validator.call) {
 						return validator(value);
@@ -94,7 +94,7 @@ exports.Record = class Record {
 			});
 			if(!valid) {
 				allValid = false;
-				warn(`${this} invalid ${repr(key)}: ${repr(value, true)}`);
+				onError(`${this} invalid ${repr(key)}: ${repr(value, true)}`);
 			}
 
 			return memo;
@@ -104,7 +104,7 @@ exports.Record = class Record {
 		objectKeys(data, expectedFields, (type, diff) => {
 			let delta = diff.map(entry => repr(entry)).join(", ");
 			let desc = diff.length === 1 ? "entry" : "entries";
-			warn(`${this}: ${type} ${desc} ${delta}`);
+			onError(`${this}: ${type} ${desc} ${delta}`);
 		});
 
 		return allValid;

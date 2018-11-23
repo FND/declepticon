@@ -1,21 +1,30 @@
 "use strict";
 
 module.exports = {
-	injectLogger: descriptor => Object.assign({ logger: makeLogger() }, descriptor),
-	makeLogger
+	injectLogger,
+	silence: descriptor => Object.assign({ onError: noop }, descriptor),
+	noop
 };
 
-function makeLogger() {
-	let info = [];
-	let warn = [];
+function injectLogger(descriptor) {
+	let { log, reset, messages } = makeLogger();
 	return {
-		messages: { info, warn },
-		info: (...msg) => void log(msg, info),
-		warn: (...msg) => void log(msg, warn)
+		descriptor: Object.assign({ onError: log }, descriptor),
+		reset,
+		messages
+	};
+}
+function makeLogger() {
+	let messages = [];
+	return {
+		log: (...msg) => {
+			messages.push(msg.join(" "));
+		},
+		reset: () => {
+			messages.length = 0;
+		},
+		messages
 	};
 }
 
-function log(messages, list) {
-	let entry = messages.join(" <|> ");
-	list.push(entry);
-}
+function noop() {}

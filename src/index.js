@@ -2,7 +2,7 @@
 
 let { Record, optional, skipSlot, eager } = require("./record");
 let validators = require("./validators");
-let { abort, log, repr } = require("./util");
+let { abort, warn, repr } = require("./util");
 
 module.exports = {
 	transformation,
@@ -11,7 +11,6 @@ module.exports = {
 	skipSlot,
 	eager,
 	validators,
-	log,
 	repr
 };
 
@@ -19,7 +18,7 @@ function transformation(descriptor) {
 	let cls = struct(descriptor);
 	return (data, context) => {
 		let record = new cls(); // eslint-disable-line new-cap
-		record.ingest(data, { context, logger: descriptor.logger });
+		record.ingest(data, { context, onError: descriptor.onError });
 		return record;
 	};
 }
@@ -60,7 +59,7 @@ function struct(name, fields, stringify) {
 function validateDescriptor(descriptor, { comprehensive }) {
 	let expected = {
 		expected: ["name", "fields"],
-		ignore: ["stringify", "logger"]
+		ignore: ["stringify", "onError"]
 	};
 	let type = comprehensive ? "expected" : "ignore";
 	expected[type].push("slots");
@@ -72,6 +71,6 @@ function validateDescriptor(descriptor, { comprehensive }) {
 		if(type === "missing") {
 			abort(`ERROR: ${msg}`);
 		}
-		log.warn(msg);
+		warn(msg);
 	});
 }
