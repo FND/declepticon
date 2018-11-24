@@ -46,6 +46,9 @@ This will turn the incoming JSON data into a record `<Item #123>` with the
 properties described by `slots`, reporting discrepancies with regard to the
 expectations expressed within `fields`.
 
+Note that transformed records can be turned back into JSON via
+`JSON.stringify(record)`, provided slots' values can be serialized.
+
 See tests for more elaborate examples.
 
 
@@ -118,11 +121,11 @@ Any descriptor object has the following properties:
   }
   ```
 
-  The right-hand side contains a validator or an array thereof (`OR`
-  conjunction). A validator is typically a function which is passed the
-  original value and returns `false` if that value is considered invalid. As
-  a shortcut, the expected value may be used as a validator instead (strict
-  equality comparison).
+  The right-hand side consists of a validator or an array thereof (`OR`
+  conjunction). A validator is typically a function which is passed the original
+  value and returns `false` if that value is considered invalid. As a shortcut,
+  the expected value may be used as a validator instead (strict equality
+  comparison).
 
   Non-essential fields are flagged by passing the respective validator(s) to the
   `optional` function (see above).
@@ -141,10 +144,11 @@ Any descriptor object has the following properties:
   }
   ```
 
-  The right-hand is typically a function which is passed the original data
-  object and the context object passed to the `transform` function (if any). It
-  returns the desired value (e.g. converting the original value into a number)
-  or `skipSlot` to conditionally omit that slot.
+  The right-hand side consists of a transformer. This is typically a function
+  which is passed the original data object and the context object passed to the
+  `transform` function (if any). It returns either the desired value (e.g.
+  converting the original value into a number) or `skipSlot` to conditionally
+  omit that slot.
 
   As a shortcut, `true` can be used to copy over the corresponding original
   value. If a string is used, the respective field's value is copied over
