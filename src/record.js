@@ -1,10 +1,8 @@
 "use strict";
-let { objectKeys } = require("./validators");
-let { warn, repr } = require("./util");
-
-let OPTIONAL = Symbol("optional field");
 let SKIP_SLOT = Symbol("optional slot");
+let OPTIONAL = Symbol("optional field");
 
+exports.OPTIONAL = OPTIONAL;
 exports.optional = (...validators) => ({ optional: OPTIONAL, validators });
 exports.eager = eager;
 exports.skipSlot = SKIP_SLOT;
@@ -61,62 +59,13 @@ exports.Record = class Record {
 		postval.forEach(setSlot);
 	}
 
-	validate(data, { context, onError = warn } = {}) {
+	validate(data, { context, onError } = {}) {
 		if(context) {
-			this.context = context; // XXX: hacky
+			this.context = context; // required for `#toString` -- XXX: hacky
 		}
-		let allValid = true;
 
-		// determine expected top-level structure while validating field values
-		let expectedFields = Object.entries(this.constructor.fields).reduce((memo,
-				[key, validators]) => {
-			let optional = validators && validators.optional === OPTIONAL;
-			if(optional) {
-				validators = validators.validators;
-			}
-			memo[optional ? "ignore" : "expected"].push(key);
-
-			// value is valid if at least one validator passes (`OR` conjunction)
-			let value = data[key];
-			if(!validators || !validators.pop) {
-				validators = [validators];
-			}
-			let valid = validators.some(validator => {
-				// a validator is either a `Record` (via a nested descriptor),
-				// a function or the expected value
-				if(optional && !data.hasOwnProperty(key)) { // XXX: does not support prototypes
-					return true;
-				}
-				if(validator) {
-					if(validator.prototype instanceof Record) {
-						if(!value) {
-							return false;
-						}
-						let subRecord = new validator(); // eslint-disable-line new-cap
-						return subRecord.validate(value, { context: this, onError });
-					}
-					if(validator.call) {
-						return validator(value);
-					}
-				}
-				return validator === value;
-			});
-			if(!valid) {
-				allValid = false;
-				onError(`${this} invalid ${repr(key)}: ${repr(value, true)}`);
-			}
-
-			return memo;
-		}, { expected: [], ignore: [] });
-
-		// check top-level structure
-		objectKeys(data, expectedFields, (type, diff) => {
-			let delta = diff.map(entry => repr(entry)).join(", ");
-			let desc = diff.length === 1 ? "entry" : "entries";
-			onError(`${this}: ${type} ${desc} ${delta}`);
-		});
-
-		return allValid;
+		let validata = require("./validation"); // avoids issues due to circular imports
+		return validata(data, this.constructor.fields, { context: this, onError });
 	}
 
 	toString(details) { // XXX: argument violates standard contract
