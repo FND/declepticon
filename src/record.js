@@ -10,9 +10,14 @@ exports.eager = eager;
 exports.skipSlot = SKIP_SLOT;
 
 exports.Record = class Record {
-	ingest(data, { context, onError }) {
-		// separate eager (pre-validation) from lazy (post-validation) transformers
-		let transformers = Object.entries(this.constructor.slots).reduce((memo,
+	// separates eager (pre-validation) from lazy (post-validation) transformers
+	static get transformers() {
+		let memo = this._transformers;
+		if(memo) {
+			return memo;
+		}
+
+		this._transformers = memo = Object.entries(this.slots).reduce((memo,
 				[slot, transformer]) => {
 			let collection;
 			if(transformer === eager) { // shortcut
@@ -30,12 +35,15 @@ exports.Record = class Record {
 			preval: new Map(),
 			postval: new Map()
 		});
+		return memo;
+	}
 
+	ingest(data, { context, onError }) {
 		// populate instance properties
 		let setSlot = (transformer, slot) => {
 			let value;
 			if(transformer === true) { // adopt original value
-				value = data[slot]; // eslint-disable-line no-var
+				value = data[slot];
 			} else if(transformer.call) { // arbitrary transformation
 				value = transformer.call(this, data, context);
 				if(value === SKIP_SLOT) { // ignore
@@ -47,9 +55,10 @@ exports.Record = class Record {
 			this[slot] = value;
 		};
 
-		transformers.preval.forEach(setSlot);
+		let { preval, postval } = this.constructor.transformers;
+		preval.forEach(setSlot);
 		this.validate(data, { onError });
-		transformers.postval.forEach(setSlot);
+		postval.forEach(setSlot);
 	}
 
 	validate(data, { context, onError = warn } = {}) {

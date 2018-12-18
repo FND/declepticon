@@ -34,7 +34,7 @@ function struct(name, fields, stringify) {
 		({ name, stringify } = descriptor);
 	}
 	if(!stringify) {
-		stringify = () => "";
+		stringify = blank;
 	}
 
 	// generate a named subclass which merely operates as a dispatching closure
@@ -73,4 +73,8 @@ function validateDescriptor(descriptor, { comprehensive }) {
 		}
 		warn(msg);
 	});
+}
+
+function blank() {
+	return "";
 }
