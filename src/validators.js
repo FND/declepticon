@@ -1,7 +1,6 @@
 "use strict";
 
 let array = value => !!(value && value.pop);
-let arrayOf = validator => value => array(value) && value.every(item => validator(item));
 let string = value => value ? !!value.substr : value === "";
 // NB: ignores whitespace
 let nonBlankString = value => string(value) && value.trim() !== "";
@@ -9,7 +8,17 @@ let nonBlankString = value => string(value) && value.trim() !== "";
 module.exports = {
 	objectKeys,
 	array,
-	arrayOf,
+	arrayOf: (validator, { context, onError } = {}) => {
+		// NB: `require` here avoids issues due to circular imports
+		let { Record } = require("./record");
+		let { validateStruct } = require("./validation");
+
+		if(validator.prototype instanceof Record) {
+			let cls = validator;
+			validator = value => validateStruct(value, cls, { context, onError });
+		}
+		return value => array(value) && value.every(item => validator(item));
+	},
 	integerString: value => {
 		if(!nonBlankString(value)) {
 			return false;

@@ -3,7 +3,7 @@ let { Record, OPTIONAL } = require("./record");
 let { objectKeys } = require("./validators");
 let { warn, repr } = require("./util");
 
-module.exports = function validate(data, fields, { context, onError = warn } = {}) {
+exports.validate = (data, fields, { context, onError = warn } = {}) => {
 	let allValid = true;
 
 	// determine expected top-level structure while validating field values
@@ -27,11 +27,7 @@ module.exports = function validate(data, fields, { context, onError = warn } = {
 			}
 			if(validator) {
 				if(validator.prototype instanceof Record) {
-					if(!value) {
-						return false;
-					}
-					let subRecord = new validator(); // eslint-disable-line new-cap
-					return subRecord.validate(value, { context, onError });
+					return validateStruct(value, validator, { context, onError });
 				}
 				if(validator.call) {
 					return validator(value);
@@ -58,3 +54,14 @@ module.exports = function validate(data, fields, { context, onError = warn } = {
 
 	return allValid;
 };
+
+exports.validateStruct = validateStruct;
+
+function validateStruct(value, cls, { context, onError } = {}) {
+	if(!value) {
+		return false;
+	}
+
+	let subRecord = new cls(); // eslint-disable-line new-cap
+	return subRecord.validate(value, { context, onError });
+}

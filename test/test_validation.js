@@ -1,7 +1,7 @@
 /* global describe, it */
 "use strict";
 
-let { transformation, struct, optional, eager } = require("../src");
+let { transformation, struct, optional, eager, validators } = require("../src");
 let { injectLogger } = require("./util");
 let { strictEqual: assertSame, deepStrictEqual: assertDeep } = require("assert");
 
@@ -185,6 +185,23 @@ describe("data validation", () => {
 		});
 		assertDeep(messages, [
 			'<Party #123 "undefined"> invalid `payload`: `null`'
+		]);
+
+		reset();
+		descriptor.fields.payload = validators.arrayOf(struct("PartyPayload", {
+			price: 456
+		}), {
+			onError: descriptor.onError
+		});
+		transform = transformation(descriptor);
+		transform({
+			id: 123,
+			payload: [{ price: 123 }, { price: 456 }],
+			active: true
+		});
+		assertDeep(messages, [
+			"<PartyPayload> invalid `price`: `123`",
+			'<Party #123 "undefined"> invalid `payload`: `[{"price":123},{"price":456}]`'
 		]);
 	});
 });

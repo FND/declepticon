@@ -1,6 +1,7 @@
 /* global describe, it */
 "use strict";
 
+let { struct } = require("../src");
 let { objectKeys, arrayOf, array, integerString, nonBlankString, string,
 	integer, boolean } = require("../src/validators");
 let { strictEqual: assertSame, deepStrictEqual: assertDeep } = require("assert");
@@ -55,6 +56,22 @@ describe("validators", () => {
 		assertSame(integerArray([123, 456]), true);
 		assertSame(integerArray(values), false);
 		assertSame(arrayOf(integerString)(values), true);
+
+		values = [];
+		let errors = [];
+		let complexArray = arrayOf(struct("Item", {
+			id: 123
+		}), {
+			onError: msg => void errors.push(msg)
+		});
+		assertSame(complexArray(values), true);
+		assertDeep(errors, []);
+		values.push({ id: 123 });
+		assertSame(complexArray(values), true);
+		assertDeep(errors, []);
+		values.push({ id: 456 });
+		assertSame(complexArray(values), false);
+		assertDeep(errors, ["<Item> invalid `id`: `456`"]);
 	});
 
 	it("should detect integers within strings", () => {

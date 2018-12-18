@@ -64,8 +64,9 @@ exports.Record = class Record {
 			this.context = context; // required for `#toString` -- XXX: hacky
 		}
 
-		let validata = require("./validation"); // avoids issues due to circular imports
-		return validata(data, this.constructor.fields, { context: this, onError });
+		// NB: `require` here avoids issues due to circular imports
+		let { validate } = require("./validation");
+		return validate(data, this.constructor.fields, { context: this, onError });
 	}
 
 	toString(details) { // XXX: argument violates standard contract
