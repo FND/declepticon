@@ -1,5 +1,6 @@
 "use strict";
-let { Record, OPTIONAL } = require("./record");
+
+let { validateStruct, BaseRecord, OPTIONAL } = require("./record/base");
 let { objectKeys } = require("./validators");
 let { warn, repr } = require("./util");
 
@@ -26,7 +27,7 @@ exports.validate = (data, fields, { context, onError = warn } = {}) => {
 				return true;
 			}
 			if(validator) {
-				if(validator.prototype instanceof Record) {
+				if(validator.prototype instanceof BaseRecord) {
 					return validateStruct(value, validator, { context, onError });
 				}
 				if(validator.call) {
@@ -54,14 +55,3 @@ exports.validate = (data, fields, { context, onError = warn } = {}) => {
 
 	return allValid;
 };
-
-exports.validateStruct = validateStruct;
-
-function validateStruct(value, cls, { context, onError } = {}) {
-	if(!value) {
-		return false;
-	}
-
-	let subRecord = new cls(); // eslint-disable-line new-cap
-	return subRecord.validate(value, { context, onError });
-}

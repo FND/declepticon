@@ -1,13 +1,14 @@
 "use strict";
-let SKIP_SLOT = Symbol("optional slot");
-let OPTIONAL = Symbol("optional field");
+let { validate: validata } = require("../validation");
+let { BaseRecord, OPTIONAL } = require("./base");
 
-exports.OPTIONAL = OPTIONAL;
+let SKIP_SLOT = Symbol("optional slot");
+
 exports.optional = (...validators) => ({ optional: OPTIONAL, validators });
 exports.eager = eager;
 exports.skipSlot = SKIP_SLOT;
 
-exports.Record = class Record {
+exports.Record = class Record extends BaseRecord {
 	// separates eager (pre-validation) from lazy (post-validation) transformers
 	static get transformers() {
 		let memo = this._transformers;
@@ -63,10 +64,7 @@ exports.Record = class Record {
 		if(context) {
 			this.context = context; // required for `#toString` -- XXX: hacky
 		}
-
-		// NB: `require` here avoids issues due to circular imports
-		let { validate } = require("./validation");
-		return validate(data, this.constructor.fields, { context: this, onError });
+		return validata(data, this.constructor.fields, { context: this, onError });
 	}
 
 	toString(details) { // XXX: argument violates standard contract

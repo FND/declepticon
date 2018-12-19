@@ -1,5 +1,7 @@
 "use strict";
 
+let { validateStruct, BaseRecord } = require("./record/base");
+
 let array = value => !!(value && value.pop);
 let string = value => value ? !!value.substr : value === "";
 // NB: ignores whitespace
@@ -9,11 +11,7 @@ module.exports = {
 	objectKeys,
 	array,
 	arrayOf: (validator, { context, onError } = {}) => {
-		// NB: `require` here avoids issues due to circular imports
-		let { Record } = require("./record");
-		let { validateStruct } = require("./validation");
-
-		if(validator.prototype instanceof Record) {
+		if(validator.prototype instanceof BaseRecord) {
 			let cls = validator;
 			validator = value => validateStruct(value, cls, { context, onError });
 		}
