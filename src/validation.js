@@ -38,8 +38,8 @@ exports.validate = (data, fields, { context, onError = warn } = {}) => {
 		});
 		if(!valid) {
 			allValid = false;
-			let prefix = context ? `${context} ` : "";
-			onError(`${prefix}invalid ${repr(key)}: ${repr(value, true)}`);
+			let msg = `invalid ${repr(key)}: ${repr(value, true)}`;
+			onError(context ? `${context} ${msg}` : `${msg} in ${repr(data, true)}`);
 		}
 
 		return memo;
@@ -49,8 +49,8 @@ exports.validate = (data, fields, { context, onError = warn } = {}) => {
 	objectKeys(data, expectedFields, (type, diff) => {
 		let delta = diff.map(entry => repr(entry)).join(", ");
 		let desc = diff.length === 1 ? "entry" : "entries";
-		let prefix = context ? `${context}: ` : "";
-		onError(`${prefix}${type} ${desc} ${delta}`);
+		let msg = `${type} ${desc} ${delta}`;
+		onError(context ? `${context}: ${msg}` : `${msg} for ${repr(data, true)}`);
 	});
 
 	return allValid;
