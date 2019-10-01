@@ -4,6 +4,8 @@ let { validateStruct, BaseRecord, OPTIONAL } = require("./record/base");
 let { objectKeys } = require("./validators");
 let { warn, repr } = require("./util");
 
+let { hasOwnProperty } = Object.prototype;
+
 exports.validate = (data, fields, { context, onError = warn } = {}) => {
 	let allValid = true;
 
@@ -23,7 +25,7 @@ exports.validate = (data, fields, { context, onError = warn } = {}) => {
 		let valid = validators.some(validator => {
 			// a validator is either a `Record` (via a nested descriptor),
 			// a function or the expected value
-			if(optional && !data.hasOwnProperty(key)) { // XXX: prototypes not supported
+			if(optional && !hasOwnProperty.call(data, key)) { // XXX: prototypes not supported
 				return true;
 			}
 			if(validator) {

@@ -2,8 +2,16 @@
 "use strict";
 
 let { struct } = require("../src");
-let { objectKeys, arrayOf, array, integerString, nonBlankString, string,
-	integer, boolean } = require("../src/validators");
+let {
+	objectKeys,
+	arrayOf,
+	array,
+	integerString,
+	nonBlankString,
+	string,
+	integer,
+	boolean
+} = require("../src/validators");
 let { strictEqual: assertSame, deepStrictEqual: assertDeep } = require("assert");
 
 describe("validators", () => {
