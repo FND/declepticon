@@ -12,6 +12,12 @@ declarative validation and transformation of inconsistently structured data
 _something_)
 
 
+Background
+----------
+
+see [blog post](https://www.innoq.com/en/blog/declarative-data-transformations/)
+
+
 Usage
 -----
 
@@ -168,3 +174,4 @@ Alternatives
 
 * [joi](https://github.com/hapijs/joi)
 * [clojure.spec](https://clojure.org/guides/spec)
+* [Meander](https://github.com/noprompt/meander)
